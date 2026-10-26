@@ -1,4 +1,6 @@
-# Produção: app + Postgres + Caddy (proxy reverso com HTTPS automático).
+# Produção: app + Postgres, servido pelo Traefik existente (stack n8n) que
+# cuida de HTTPS/Let's Encrypt. O app entra na rede n8n_default com labels
+# Traefik — sem porta pública.
 # Uso: docker compose -f docker-compose.prod.yml up -d --build
 # Documentação completa: DEPLOY.md
 
@@ -33,7 +35,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.prod
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
-      # O Caddy encerra o TLS e redireciona HTTP→HTTPS; não duplicar no Django.
+      # O Traefik encerra o TLS e redireciona HTTP→HTTPS; não duplicar no Django.
       SECURE_SSL_REDIRECT: "False"
     command:
       - sh
@@ -42,34 +44,26 @@ services:
         uv run python manage.py migrate --noinput &&
         uv run python manage.py collectstatic --noinput &&
         uv run gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60 --access-logfile - --error-logfile -
-    # Sem porta pública: só acessível via Caddy (rede interna).
+    # Sem porta pública: roteado pelo Traefik via rede n8n_default.
     volumes:
       - media_data:/app/media
+    networks:
+      - default
+      - n8n
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.aciac.rule=Host(`dutratech.cloud`) || Host(`www.dutratech.cloud`)
+      - traefik.http.routers.aciac.tls=true
+      - traefik.http.routers.aciac.tls.certresolver=mytlschallenge
+      - traefik.http.routers.aciac.entrypoints=web,websecure
+      - traefik.http.services.aciac.loadbalancer.server.port=8000
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    depends_on:
-      - app
-    environment:
-      DOMAIN: ${DOMAIN:-dutratech.cloud}
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp" # HTTP/3
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data # certificados Let's Encrypt
-      - caddy_config:/config
-      - media_data:/media:ro # mídia servida direto pelo Caddy
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:2019/config/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+networks:
+  n8n:
+    name: n8n_default
+    external: true
 
 volumes:
   pgdata:
   media_data:
-  caddy_data:
-  caddy_config:

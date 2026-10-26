@@ -16,7 +16,7 @@ associados, área logada (painel), consulta de CPF/CNPJ, solicitação de servi�
 | Frontend | Django Templates + CSS próprio mobile-first + JS leve |
 | Consulta CNPJ | BrasilAPI (gratuita, via `httpx`, com cache e rate-limit) |
 | PIX | Payload EMV (BR Code) gerado em Python puro + QR client-side |
-| Deploy | Docker Compose (app + Postgres) ou `uv run` direto; produção com Caddy (HTTPS) |
+| Deploy | Docker Compose (app + Postgres) ou `uv run` direto; produção com Traefik (HTTPS) |
 
 ## Estrutura
 
@@ -57,20 +57,20 @@ docker compose up --build  # app em http://localhost:8000
 
 ## Como publicar em produção
 
-Stack de produção (`docker-compose.prod.yml`): Postgres + app + **Caddy**
-(proxy reverso com HTTPS automático via Let's Encrypt). Guia completo
+Stack de produção (`docker-compose.prod.yml`): Postgres + app, servidos pelo
+**Traefik** (proxy reverso com HTTPS automático via Let's Encrypt — o mesmo
+do n8n no VPS). Guia completo
 (Hostinger VPS, DNS, firewall, backups): **[DEPLOY.md](DEPLOY.md)**.
 
 ```bash
 cp .env.example .env   # configure SECRET_KEY, ALLOWED_HOSTS, senha do banco etc.
-./deploy.sh up         # build + migrate + collectstatic + gunicorn + Caddy
+./deploy.sh up         # build + migrate + collectstatic + gunicorn
 ./deploy.sh superuser  # cria o admin
 ```
 
 | Arquivo | Papel |
 |---|---|
-| `docker-compose.prod.yml` | Stack de produção (app/Postgres sem porta pública; só Caddy 80/443) |
-| `deploy/Caddyfile` | Domínio, HTTPS automático e servidão de `/media` |
+| `docker-compose.prod.yml` | Stack de produção (app/Postgres sem porta pública; labels Traefik) |
 | `deploy.sh` | Atalhos: `up`, `logs`, `backup`, `restore`, `migrate`… |
 
 ## Configuração via `.env`
@@ -131,7 +131,7 @@ Passo a passo detalhado: [DEPLOY.md](DEPLOY.md).
 
 1. `SECRET_KEY` forte e `ALLOWED_HOSTS`/`CSRF_TRUSTED_ORIGINS` reais no `.env`
 2. `ASSOCIACAO_PIX_CHAVE` com a chave PIX oficial da associação
-3. HTTPS ativo (Caddy no `docker-compose.prod.yml` obtém e renova o certificado)
+3. HTTPS ativo (Traefik no VPS obtém e renova o certificado)
 4. `./deploy.sh superuser` + revisão de permissões
 5. Backup do Postgres (`./deploy.sh backup` + cron — ver DEPLOY.md)
 6. E-mail transacional configurado (`EMAIL_BACKEND` SMTP) para recuperação de senha

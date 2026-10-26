@@ -2,34 +2,37 @@
 
 Guia completo para publicar o site em produção com HTTPS automático.
 
-## Arquiturura
+## Arquitetura
+
+O VPS já roda o **n8n com Traefik** (proxy reverso com Let's Encrypt nas
+portas 80/443). O site entra nessa stack de borda via labels — **sem porta
+própria e sem outro proxy**:
 
 ```
-Internet ──► Caddy (:80/:443) ──► app:8000 (Django/gunicorn)
-                     │                    │
-              certificado          db:5432 (Postgres)
-              Let's Encrypt         (rede interna)
+Internet ──► Traefik (:80/:443, stack n8n) ──► app:8000 (Django/gunicorn)
+                       │                           │
+                Let's Encrypt                db:5432 (Postgres)
+                (mytlschallenge)             (rede interna)
 ```
 
 | Arquivo | Papel |
 |---|---|
-| `docker-compose.prod.yml` | Stack de produção: Postgres + app + Caddy |
-| `deploy/Caddyfile` | Proxy reverso, HTTPS automático e servidão de `/media` |
+| `docker-compose.prod.yml` | Stack de produção: Postgres + app (rede `n8n_default` + labels Traefik) |
 | `deploy.sh` | Atalhos: deploy, logs, backup, migrate, superuser |
 | `.env` | **Nunca versionado** — toda a configuração sensível |
 
 Decisões de design:
 
-- **Caddy dentro do Docker** (não no host): tudo versionado e reproduzível;
-  migra de servidor com o mesmo comando.
-- **Sem portas públicas** para app (8000) e Postgres — só o Caddy expõe
+- **Traefik do n8n como proxy de borda**: o container `app` entra na rede
+  externa `n8n_default` com labels `traefik.*`; o Traefik roteia
+  `dutratech.cloud`/`www` → `app:8000` e emite o certificado automaticamente.
+  O stack do n8n (`/docker/n8n`) não é alterado.
+- **Sem portas públicas** para app (8000) e Postgres — só o Traefik expõe
   80/443; o restante fica na rede interna do Compose.
-- **HTTPS automático** via Let's Encrypt (Caddy obtém e renova o certificado
-  sozinho — sem cron de certbot).
-- **Mídia** (`/media`) servida direto pelo Caddy (mais rápido; volume
-  compartilhado com o app).
-- `prod.py` já endurece a aplicação (`DEBUG=False`, HSTS, cookies `Secure`);
-  `SECURE_SSL_REDIRECT=False` no Compose porque o Caddy cuida do
+- **HTTPS automático** via Let's Encrypt (cert resolver `mytlschallenge`,
+  o mesmo do n8n — sem cron de certbot).
+- `prod.py` endurece a aplicação (`DEBUG=False`, HSTS, cookies `Secure`);
+  `SECURE_SSL_REDIRECT=False` no Compose porque o Traefik cuida do
   redirecionamento HTTP→HTTPS e informa o esquema via `X-Forwarded-Proto`.
 
 ---
@@ -50,7 +53,7 @@ compartilhada (cPanel/PHP) da Hostinger. Use um dos:
 ### 1.2 Domínio
 
 O domínio `dutratech.cloud` deve resolver (DNS) para o IP do VPS **antes** de
-subir o Caddy — senão o Let's Encrypt falha ao validar.
+subir o Traefik — senão o Let's Encrypt falha ao validar.
 
 No hPanel da Hostinger (domínio registrado lá):
 
@@ -140,7 +143,7 @@ Checklist mínimo para produção:
 | `DEBUG` | `False` |
 | `ALLOWED_HOSTS` | `dutratech.cloud,www.dutratech.cloud` |
 | `CSRF_TRUSTED_ORIGINS` | `https://dutratech.cloud,https://www.dutratech.cloud` |
-| `DOMAIN` | `dutratech.cloud` (usado pelo Caddy) |
+| `DOMAIN` | `dutratech.cloud` (referência; o Traefik usa os labels do compose) |
 | `POSTGRES_PASSWORD` | senha forte aleatória |
 | `ASSOCIACAO_PIX_CHAVE` | chave PIX oficial da associação |
 | `EMAIL_BACKEND` | `django.core.mail.backends.smtp.EmailBackend` |
@@ -193,8 +196,9 @@ O que acontece:
 1. Build da imagem da app (Python 3.12 + gunicorn + whitenoise).
 2. Postgres sobe e passa no healthcheck.
 3. App roda `migrate` + `collectstatic` e sobe o gunicorn.
-4. Caddy sobe, obtém o certificado Let's Encrypt (ouvia 80/443) e serve
-   `https://dutratech.cloud` (e `www`).
+4. O Traefik (stack do n8n) detecta o novo container via labels e roteia
+   `https://dutratech.cloud` para o app. Na primeira subida, o Let's Encrypt
+   emite o certificado (leva alguns segundos).
 
 Verifique:
 
@@ -251,11 +255,8 @@ git pull --ff-only
 ./deploy.sh up      # rebuild + restart; migrations rodam automaticamente
 ```
 
-O Caddy só recarrega a config se `deploy/Caddyfile` mudar — nesse caso:
-
-```bash
-./deploy.sh restart caddy
-```
+Se mudar os labels Traefik no compose, o Traefik reconfigura sozinho ao
+recriar o container (não precisa reiniciar o n8n).
 
 ---
 
@@ -263,7 +264,7 @@ O Caddy só recarrega a config se `deploy/Caddyfile` mudar — nesse caso:
 
 | Sintoma | Causa provável | Solução |
 |---|---|---|
-| Caddy log: erro de certificado / ACME challenge | DNS não aponta para o VPS | Aguarde propagação (`dig`); libere 80/443 no firewall |
+| Traefik log: erro de certificado / ACME | DNS não aponta para o VPS | Aguarde propagação (`dig`); confira se o app está na rede `n8n_default` |
 | `400 Bad Request` no admin/POST | `CSRF_TRUSTED_ORIGINS` errado no `.env` | Inclua `https://dutratech.cloud` e reinicie: `./deploy.sh restart app` |
 | `DisallowedHost` no log | `ALLOWED_HOSTS` sem o domínio | Corrija o `.env` e `./deploy.sh restart app` |
 | Erro 502 | App não subiu | `./deploy.sh logs app` (migrations/secret) |
@@ -274,7 +275,7 @@ O Caddy só recarrega a config se `deploy/Caddyfile` mudar — nesse caso:
 Logs úteis:
 
 ```bash
-./deploy.sh logs caddy
+./deploy.sh logs app
 ./deploy.sh logs app
 ./deploy.sh logs db
 docker compose -f docker-compose.prod.yml exec app \
