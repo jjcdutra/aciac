@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Cadastro de associado — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Associe-se</h1>
+  <p class="muted">Preencha os dados abaixo. Após aprovação pela equipe, você terá acesso ao painel.</p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="form-card wide">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">
+          {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="id_username">Nome de usuário *</label>
+          <input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" required autocomplete="username" placeholder="será usado para entrar">
+          {% if form.username.errors %}<span class="error-text">{{ form.username.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="id_email">E-mail *</label>
+          <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}" required autocomplete="email" placeholder="seu@email.com.br">
+          {% if form.email.errors %}<span class="error-text">{{ form.email.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="id_documento">CPF ou CNPJ *</label>
+          <input type="text" name="documento" id="id_documento" value="{{ form.documento.value|default:'' }}" required data-mask="documento" placeholder="000.000.000-00">
+          {% if form.documento.errors %}<span class="error-text">{{ form.documento.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="id_razao_social">Nome completo / Razão social *</label>
+          <input type="text" name="razao_social" id="id_razao_social" value="{{ form.razao_social.value|default:'' }}" required>
+          {% if form.razao_social.errors %}<span class="error-text">{{ form.razao_social.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="id_nome_fantasia">Nome fantasia</label>
+          <input type="text" name="nome_fantasia" id="id_nome_fantasia" value="{{ form.nome_fantasia.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label for="id_telefone">Telefone / WhatsApp</label>
+          <input type="tel" name="telefone" id="id_telefone" value="{{ form.telefone.value|default:'' }}" data-mask="telefone" placeholder="(11) 99999-9999">
+        </div>
+        <div class="form-group">
+          <label for="id_password1">Senha *</label>
+          <input type="password" name="password1" id="id_password1" required autocomplete="new-password">
+          {% if form.password1.errors %}<span class="error-text">{{ form.password1.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="id_password2">Confirmar senha *</label>
+          <input type="password" name="password2" id="id_password2" required autocomplete="new-password">
+          {% if form.password2.errors %}<span class="error-text">{{ form.password2.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div class="full"><hr style="border:0;border-top:1px solid var(--cinza-200);margin:0.5rem 0"></div>
+        <p class="full muted" style="margin:0"><strong>Endereço</strong> (opcional, pode completar depois no painel)</p>
+
+        <div class="form-group full">
+          <label for="id_logradouro">Logradouro</label>
+          <input type="text" name="logradouro" id="id_logradouro" value="{{ form.logradouro.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label for="id_numero">Número</label>
+          <input type="text" name="numero" id="id_numero" value="{{ form.numero.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label for="id_bairro">Bairro</label>
+          <input type="text" name="bairro" id="id_bairro" value="{{ form.bairro.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label for="id_cidade">Cidade</label>
+          <input type="text" name="cidade" id="id_cidade" value="{{ form.cidade.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label for="id_uf">UF</label>
+          <input type="text" name="uf" id="id_uf" value="{{ form.uf.value|default:'' }}" maxlength="2" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label for="id_cep">CEP</label>
+          <input type="text" name="cep" id="id_cep" value="{{ form.cep.value|default:'' }}">
+        </div>
+
+        <div class="form-group full form-checkbox">
+          <input type="checkbox" name="aceite_termos" id="id_aceite_termos" {% if form.aceite_termos.value %}checked{% endif %} required>
+          <label for="id_aceite_termos">Li e aceito os termos de uso e a política de privacidade. *</label>
+          {% if form.aceite_termos.errors %}<span class="error-text">{{ form.aceite_termos.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div class="full">
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Enviar cadastro</button>
+          <p class="text-center muted mt-2">Já é associado? <a href="{% url 'associados:login' %}">Entrar</a></p>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Consulta CPF/CNPJ — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Consulta CPF/CNPJ</h1>
+  <p class="muted">Verificação cadastral via dados abertos da Receita Federal (BrasilAPI).</p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:560px">
+    {% if erro %}
+      <div class="alert alert-error" role="alert">{{ erro }}</div>
+    {% endif %}
+
+    <form method="post" id="formConsulta">
+      {% csrf_token %}
+      <div class="form-group mb-2">
+        <label for="id_documento">{{ form.documento.label }}</label>
+        {{ form.documento }}
+        {% if form.documento.errors %}<span class="error-text">{{ form.documento.errors.0 }}</span>{% endif %}
+        <span class="help-text">Consulta limitada a {{ rate_limit }} por minuto por IP.</span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Consultar</button>
+    </form>
+
+    <div id="resultadoAjax" class="resultado" hidden></div>
+
+    {% if resultado %}
+      <div class="resultado">
+        <h2 style="font-size:1.15rem">
+          {% if resultado.tipo == 'cnpj' %}{{ resultado.razao_social }}{% else %}{{ resultado.nome }}{% endif %}
+          <span class="badge badge-verde" style="font-size:0.7rem">ok</span>
+        </h2>
+        <dl>
+          {% if resultado.tipo == 'cnpj' %}
+            <dt>CNPJ</dt><dd>{{ resultado.cnpj }}</dd>
+            {% if resultado.nome_fantasia %}<dt>Nome fantasia</dt><dd>{{ resultado.nome_fantasia }}</dd>{% endif %}
+            <dt>Situação cadastral</dt><dd>{{ resultado.situacao }}</dd>
+            {% if resultado.abertura %}<dt>Abertura</dt><dd>{{ resultado.abertura }}</dd>{% endif %}
+            {% if resultado.cnae %}<dt>CNAE</dt><dd>{{ resultado.cnae }}</dd>{% endif %}
+            <dt>Endereço</dt><dd>{{ resultado.logradouro }}, {{ resultado.numero }}{% if resultado.complemento %} — {{ resultado.complemento }}{% endif %}<br>{{ resultado.bairro }} — {{ resultado.municipio }}/{{ resultado.uf }} · CEP {{ resultado.cep }}</dd>
+            {% if resultado.telefone %}<dt>Telefone</dt><dd>{{ resultado.telefone }}</dd>{% endif %}
+            {% if resultado.capital_social %}<dt>Capital social</dt><dd>R$ {{ resultado.capital_social }}</dd>{% endif %}
+            {% if resultado.qsa %}
+              <dt>Quadro societário</dt>
+              <dd>
+                <ul class="qsa-list">
+                  {% for socio in resultado.qsa %}
+                    <li>{{ socio.nome }} <span class="muted">— {{ socio.qualificacao }}</span></li>
+                  {% endfor %}
+                </ul>
+              </dd>
+            {% endif %}
+          {% else %}
+            <dt>CPF</dt><dd>{{ resultado.cpf }}</dd>
+            <dt>Nome</dt><dd>{{ resultado.nome }}</dd>
+            {% if resultado.nascimento %}<dt>Nascimento</dt><dd>{{ resultado.nascimento }}</dd>{% endif %}
+            <dt>Situação</dt><dd>{{ resultado.situacao }}</dd>
+          {% endif %}
+          <dt>Fonte</dt><dd class="muted">{{ resultado.fonte }}</dd>
+        </dl>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

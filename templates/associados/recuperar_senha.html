@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Recuperar senha — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title"><h1>Recuperar senha</h1></div>
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:460px">
+    <p class="muted">Informe seu e-mail cadastrado. Enviaremos um link para redefinir a senha.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% if form.errors %}<div class="alert alert-error">E-mail não encontrado ou inválido.</div>{% endif %}
+      <div class="form-group mb-2">
+        <label for="id_email">E-mail</label>
+        <input type="email" name="email" id="id_email" required autofocus placeholder="seu@email.com.br">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Enviar link</button>
+      <p class="text-center muted mt-2"><a href="{% url 'associados:login' %}">Voltar ao login</a></p>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate 'Entrar no painel' %} — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>{% translate 'Painel administrativo' %}</h1>
+</div>
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:440px">
+    <form method="post" action="{{ app_path }}">
+      {% csrf_token %}
+      {% if form.errors and not form.non_field_errors %}
+        <div class="alert alert-error">{% translate 'Usuário ou senha inválidos. Verifique e tente novamente.' %}</div>
+      {% endif %}
+      {% for error in form.non_field_errors %}
+        <div class="alert alert-error">{{ error }}</div>
+      {% endfor %}
+      {% if user.is_authenticated %}
+        <div class="alert alert-warning">
+          {% blocktranslate trimmed %}
+            Você está autenticado como {{ username }}, mas não tem permissão para acessar esta página. Entre com outra conta.
+          {% endblocktranslate %}
+        </div>
+      {% endif %}
+      <div class="form-grid">
+        <div class="form-group full">
+          <label for="id_username">{% translate 'Usuário' %}</label>
+          {{ form.username }}
+          {{ form.username.errors }}
+        </div>
+        <div class="form-group full">
+          <label for="id_password">{% translate 'Senha' %}</label>
+          {{ form.password }}
+          {{ form.password.errors }}
+        </div>
+        <div class="full">
+          <button type="submit" class="btn btn-primary btn-block btn-lg">{% translate 'Entrar' %}</button>
+          <input type="hidden" name="next" value="{{ next }}">
+          <p class="text-center muted mt-2">
+            <a href="{% url 'associados:login' %}">{% translate 'Área do associado' %}</a> ·
+            <a href="{% url 'core:home' %}">{% translate 'Ir para o site' %}</a>
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

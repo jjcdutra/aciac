@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Nova senha — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title"><h1>Defina nova senha</h1></div>
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:460px">
+    <form method="post">
+      {% csrf_token %}
+      {% if form.errors %}<div class="alert alert-error">Verifique os campos e tente novamente.</div>{% endif %}
+      <div class="form-grid">
+        <div class="form-group full">
+          <label for="id_new_password1">Nova senha</label>
+          <input type="password" name="new_password1" id="id_new_password1" required autocomplete="new-password">
+        </div>
+        <div class="form-group full">
+          <label for="id_new_password2">Confirmar nova senha</label>
+          <input type="password" name="new_password2" id="id_new_password2" required autocomplete="new-password">
+        </div>
+        <div class="full">
+          <button type="submit" class="btn btn-primary btn-block">Redefinir senha</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

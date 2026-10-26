@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Meu painel — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Olá, {{ user.get_full_name|default:user.username }}</h1>
+  {% if perfil %}
+    <p class="muted">Matrícula <strong>{{ perfil.matricula }}</strong> ·
+      {% if perfil.status == 'ativo' %}
+        <span class="badge badge-verde">Ativo</span>
+      {% elif perfil.status == 'pendente' %}
+        <span class="badge badge-amarelo">Pendente de aprovação</span>
+      {% else %}
+        <span class="badge badge-cinza">Inativo</span>
+      {% endif %}
+    </p>
+  {% endif %}
+</div>
+
+{% if pendente_aprovacao %}
+  <div class="container">
+    <div class="alert alert-warning">Seu cadastro está em análise. Assim que for aprovado pela equipe, você poderá solicitar serviços.</div>
+  </div>
+{% endif %}
+
+<section class="section" style="padding-top:1rem">
+  <div class="container painel-grid">
+    <div>
+      <div class="painel-card mb-3">
+        <h2>Minhas solicitações</h2>
+        {% if solicitacoes %}
+          {% for s in solicitacoes %}
+            <div class="solicitacao-item">
+              <div>
+                <strong>{{ s.protocolo }}</strong> — {{ s.servico.nome }}<br>
+                <span class="muted">R$ {{ s.valor|floatformat:2 }} · {% now "d/m/Y" %}</span>
+              </div>
+              <div style="display:flex;gap:0.6rem;align-items:center">
+                <span class="badge badge-{{ s.cor_status }}">{{ s.get_status_display }}</span>
+                <a class="btn btn-outline btn-sm" href="{% url 'solicitacoes:detalhe' s.protocolo %}">Ver</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">Você ainda não possui solicitações.</div>
+        {% endif %}
+        {% if aprovado %}
+          <a class="btn btn-primary mt-2" href="{% url 'solicitacoes:servicos' %}">Solicitar um serviço</a>
+        {% endif %}
+      </div>
+
+      <div class="painel-card">
+        <h2>Pagamentos recentes</h2>
+        {% if pagamentos %}
+          {% for p in pagamentos %}
+            <div class="solicitacao-item">
+              <span>{{ p.solicitacao.protocolo }} — R$ {{ p.valor|floatformat:2 }}</span>
+              <span class="badge {% if p.pago %}badge-verde{% else %}badge-amarelo{% endif %}">
+                {% if p.pago %}Pago{% else %}Aguardando{% endif %}
+              </span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">Nenhum pagamento registrado.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div>
+      <div class="painel-card mb-3">
+        <h2>Atalhos</h2>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          {% if aprovado %}
+            <a class="btn btn-outline btn-block" href="{% url 'consultas:consulta' %}">Consulta CPF/CNPJ</a>
+          {% endif %}
+          <a class="btn btn-outline btn-block" href="{% url 'solicitacoes:minhas' %}">Todas as solicitações</a>
+          <a class="btn btn-outline btn-block" href="{% url 'associados:perfil' %}">Editar meus dados</a>
+        </div>
+      </div>
+
+      {% if perfil %}
+      <div class="painel-card">
+        <h2>Meus dados</h2>
+        <p class="muted" style="margin:0"><strong>{{ perfil.razao_social }}</strong><br>
+          {{ perfil.documento_mascarado }}<br>
+          {{ perfil.cidade }}/{{ perfil.uf }}
+        </p>
+        <p class="muted" style="margin-top:0.8rem">Taxa anual: <strong>R$ {{ valor_taxa|floatformat:2 }}</strong></p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

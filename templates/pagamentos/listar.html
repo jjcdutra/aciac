@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Pagamentos — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Pagamentos</h1>
+  <p class="muted"><a href="{% url 'associados:painel' %}">← Voltar ao painel</a></p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="form-card wide">
+    {% if pagamentos %}
+      {% for p in pagamentos %}
+        <div class="solicitacao-item">
+          <div>
+            <strong>{{ p.solicitacao.protocolo }}</strong> — {{ p.solicitacao.servico.nome }}<br>
+            <span class="muted">R$ {{ p.valor|floatformat:2 }} · {{ p.criado_em|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div style="display:flex;gap:0.6rem;align-items:center">
+            <span class="badge {% if p.pago %}badge-verde{% else %}badge-amarelo{% endif %}">
+              {% if p.pago %}Pago{% else %}Aguardando confirmação{% endif %}
+            </span>
+            <a class="btn btn-outline btn-sm" href="{% url 'solicitacoes:detalhe' p.solicitacao.protocolo %}">Ver</a>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">Nenhum pagamento registrado.</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

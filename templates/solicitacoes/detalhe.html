@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ s.protocolo }} — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Solicitação {{ s.protocolo }}</h1>
+  <p class="muted"><a href="{% url 'solicitacoes:minhas' %}">← Minhas solicitações</a></p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="container painel-grid">
+    <div class="painel-card">
+      <h2>Detalhes</h2>
+      <dl class="resultado" style="box-shadow:none;padding:0;margin:0">
+        <dt>Serviço</dt><dd>{{ s.servico.nome }}</dd>
+        <dt>Valor</dt><dd>R$ {{ s.valor|floatformat:2 }}</dd>
+        <dt>Status</dt><dd><span class="badge badge-{{ s.cor_status }}">{{ s.get_status_display }}</span></dd>
+        <dt>Criado em</dt><dd>{{ s.criado_em|date:"d/m/Y H:i" }}</dd>
+        {% if s.pago_em %}<dt>Pago em</dt><dd>{{ s.pago_em|date:"d/m/Y H:i" }}</dd>{% endif %}
+        {% if s.concluido_em %}<dt>Concluído em</dt><dd>{{ s.concluido_em|date:"d/m/Y H:i" }}</dd>{% endif %}
+        {% if s.observacoes %}<dt>Observações</dt><dd>{{ s.observacoes }}</dd>{% endif %}
+      </dl>
+
+      {% if s.status == 'em_analise' %}
+        <div class="alert alert-info mt-2">Pagamento registrado. Aguarde a confirmação da equipe.</div>
+      {% elif s.status == 'concluido' %}
+        <div class="alert alert-success mt-2">Serviço concluído!</div>
+      {% elif s.status == 'cancelado' %}
+        <div class="alert alert-warning mt-2">Esta solicitação foi cancelada.</div>
+      {% endif %}
+    </div>
+
+    <div>
+      {% if s.pode_pagar %}
+        <div class="painel-card">
+          <h2>Pagamento</h2>
+          <p class="muted">Realize o pagamento PIX para que a solicitação seja analisada.</p>
+          <a class="btn btn-primary btn-block" href="{% url 'solicitacoes:pagar' s.protocolo %}">Pagar com PIX</a>
+        </div>
+      {% elif pagamento %}
+        <div class="painel-card">
+          <h2>Pagamento</h2>
+          <p class="muted" style="margin:0">
+            {% if pagamento.pago %}
+              <span class="badge badge-verde">Pago</span> em {{ pagamento.pago_em|date:"d/m/Y H:i" }}
+            {% else %}
+              <span class="badge badge-amarelo">Aguardando confirmação</span>
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Entrar — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Entrar</h1>
+</div>
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:440px">
+    <form method="post">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="alert alert-error">Usuário ou senha inválidos. Verifique e tente novamente.</div>
+      {% endif %}
+      {% if next and user.is_authenticated %}
+        <div class="alert alert-warning">Sua conta não tem permissão para acessar esta página.</div>
+      {% endif %}
+      <div class="form-grid">
+        <div class="form-group full">
+          <label for="id_username">Usuário</label>
+          <input type="text" name="username" id="id_username" required autofocus autocomplete="username">
+        </div>
+        <div class="form-group full">
+          <label for="id_password">Senha</label>
+          <input type="password" name="password" id="id_password" required autocomplete="current-password">
+        </div>
+        <div class="full">
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar</button>
+          <input type="hidden" name="next" value="{{ next }}">
+          <p class="text-center muted mt-2">
+            <a href="{% url 'associados:recuperar_senha' %}">Esqueci minha senha</a><br>
+            Ainda não é associado? <a href="{% url 'associados:cadastro' %}">Cadastre-se</a>
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

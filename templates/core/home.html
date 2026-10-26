@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Início — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <h1>{{ associacao.NOME }}</h1>
+    <p>Serviços completos para o associado: consulta de CPF/CNPJ, emissão de certificado digital, suporte consultivo e representação comercial.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="{% url 'associados:cadastro' %}">Associe-se agora</a>
+      <a class="btn btn-outline btn-lg" href="{% url 'associados:login' %}">Entrar e consultar CPF/CNPJ</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Nossos serviços</h2>
+      <p>Tudo o que o associado precisa em um só lugar, com atendimento ágil e seguro.</p>
+    </div>
+    <div class="cards">
+      {% for s in servicos %}
+      <div class="card">
+        <div class="card-icon" aria-hidden="true">🛠️</div>
+        <h3>{{ s.nome }}</h3>
+        <p>{{ s.descricao }}</p>
+        <span class="valor">R$ {{ s.valor|floatformat:2 }}</span>
+        {% if user.is_authenticated %}
+          <a href="{% url 'solicitacoes:servicos' %}">Solicitar →</a>
+        {% else %}
+          <a href="{% url 'associados:login' %}">Entrar para solicitar →</a>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">Nenhum serviço cadastrado no momento.</div>
+      {% endfor %}
+      <div class="card">
+        <div class="card-icon" aria-hidden="true">🔍</div>
+        <h3>Consulta CPF/CNPJ</h3>
+        <p>Verificação cadastral em tempo real via dados abertos da Receita Federal. Exclusivo para associados.</p>
+        <a href="{% url 'associados:login' %}">Entrar para consultar →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon" aria-hidden="true">🤝</div>
+        <h3>Área do associado</h3>
+        <p>Painel exclusivo para acompanhar solicitações, pagamentos e dados cadastrais.</p>
+        <a href="{% url 'associados:login' %}">Acessar painel →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container text-center">
+    <h2>Por que se associar?</h2>
+    <p class="muted" style="max-width:640px;margin:0.5rem auto 2rem">Acesso a serviços digitais, atendimento prioritário e representação dos seus interesses.</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'associados:cadastro' %}">Quero me associar</a>
+  </div>
+</section>
+{% endblock %}

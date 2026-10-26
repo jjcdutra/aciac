@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Pagar {{ s.protocolo }} — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Pagamento PIX</h1>
+  <p class="muted">Solicitação <strong>{{ s.protocolo }}</strong> — {{ s.servico.nome }} ·
+    <strong>R$ {{ s.valor|floatformat:2 }}</strong></p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:560px">
+    <div class="pix-box">
+      <p style="margin-top:0"><strong>Escaneie o QR Code ou copie o código abaixo</strong> no app do seu banco.</p>
+
+      <div id="qrcode-pix" aria-label="QR Code PIX"></div>
+
+      <p class="muted" style="margin-bottom:0.4rem">PIX copia e cola:</p>
+      <div class="pix-payload" id="pixPayload">{{ pagamento.pix_payload }}</div>
+      <button type="button" class="btn btn-outline btn-block" data-copy="#pixPayload">Copiar código PIX</button>
+    </div>
+
+    <form method="post" class="mt-3">
+      {% csrf_token %}
+      <input type="hidden" name="confirmar" value="1">
+      <button type="submit" class="btn btn-success btn-block btn-lg">Já realizei o pagamento</button>
+    </form>
+
+    <p class="text-center muted mt-2">Após a confirmação, a equipe liberará sua solicitação.<br>
+      <a href="{% url 'solicitacoes:detalhe' s.protocolo %}">Voltar para a solicitação</a></p>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" crossorigin="anonymous"></script>
+<script>
+  (function () {
+    var el = document.getElementById("qrcode-pix");
+    var payload = document.getElementById("pixPayload");
+    if (!el || !payload || typeof qrcode === "undefined") return;
+    try {
+      var qr = qrcode(0, "M");
+      qr.addData(payload.textContent.trim());
+      qr.make();
+      el.innerHTML = qr.createImgTag({ cellSize: 4, margin: 2 });
+      var img = el.querySelector("img");
+      if (img) { img.style.width = "100%"; img.style.height = "auto"; }
+    } catch (e) { /* QR indisponível: o copia-e-cola continua funcional */ }
+  })();
+</script>
+{% endblock %}

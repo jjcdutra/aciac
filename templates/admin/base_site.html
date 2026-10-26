@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Administração') }}{% endblock %}
+
+{% block dark-mode-vars %}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" {% csp_nonce_attr %}>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}" {% csp_nonce_attr %}>
+{% endblock %}
+
+{% block header %}
+  <header class="site-header admin-header">
+    <div class="container header-inner">
+      <a class="brand" href="{% url 'admin:index' %}">
+        <span class="brand-mark" aria-hidden="true">◆</span>
+        <span class="brand-name">{{ associacao.NOME }}</span>
+        <span class="badge badge-azul admin-badge">Administração</span>
+      </a>
+      <nav class="nav admin-nav" aria-label="{% translate 'Administração' %}">
+        {% if site_url %}
+          <a href="{{ site_url }}">{% translate 'Ver site' %}</a>
+        {% endif %}
+        <a href="{% url 'admin:password_change' %}">{% translate 'Minha conta' %}</a>
+        <form method="post" action="{% url 'admin:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm">{% translate 'Sair' %}</button>
+        </form>
+      </nav>
+    </div>
+  </header>
+{% endblock %}
+
+{% block footer %}{% if not is_popup %}© {% now "Y" %} {{ associacao.NOME }} — {% translate 'Painel administrativo. Todos os direitos reservados.' %}{% endif %}{% endblock %}

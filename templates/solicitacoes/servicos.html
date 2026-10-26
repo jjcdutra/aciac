@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Serviços — Solicitar — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Solicitar serviço</h1>
+  <p class="muted">Escolha o serviço desejado. Após a solicitação, você recebe o código PIX para pagamento.</p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="container painel-grid">
+    <div>
+      <div class="cards" style="grid-template-columns:1fr">
+        {% for s in servicos %}
+        <div class="card">
+          <h3>{{ s.nome }}</h3>
+          <p>{{ s.descricao }}</p>
+          <span class="valor">R$ {{ s.valor|floatformat:2 }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <div class="painel-card">
+        <h2>Nova solicitação</h2>
+        <form method="post">
+          {% csrf_token %}
+          {% if form.errors %}<div class="alert alert-error">Verifique os campos selecionados.</div>{% endif %}
+          <div class="form-group mb-2">
+            <label for="id_servico">Serviço</label>
+            {{ form.servico }}
+            {% if form.servico.errors %}<span class="error-text">{{ form.servico.errors.0 }}</span>{% endif %}
+          </div>
+          <div class="form-group mb-2">
+            <label for="id_observacoes">Observações</label>
+            {{ form.observacoes }}
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Criar solicitação</button>
+        </form>
+        <p class="muted mt-2"><a href="{% url 'solicitacoes:minhas' %}">Ver minhas solicitações →</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Serviços — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Serviços</h1>
+  <p class="muted">Conheça os serviços disponíveis para associados.</p>
+</div>
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="cards">
+      {% for s in servicos %}
+      <div class="card">
+        <h3>{{ s.nome }}</h3>
+        <p>{{ s.descricao }}</p>
+        <span class="valor">R$ {{ s.valor|floatformat:2 }}</span>
+        {% if user.is_authenticated %}
+          <a class="btn btn-primary btn-sm" href="{% url 'solicitacoes:servicos' %}">Solicitar</a>
+        {% else %}
+          <a class="btn btn-outline btn-sm" href="{% url 'associados:login' %}">Entrar para solicitar</a>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">Nenhum serviço cadastrado no momento.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Sobre — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Sobre a associação</h1>
+</div>
+<section class="section" style="padding-top:0">
+  <div class="form-card wide">
+    <p>A <strong>{{ associacao.NOME }}</strong> é uma entidade de representação que reúne empresas e profissionais do comércio e dos serviços. Nossa missão é defender os interesses dos associados, facilitar o acesso a serviços essenciais e promover o desenvolvimento do setor.</p>
+    <h2>O que oferecemos</h2>
+    <ul>
+      <li>Consulta de CPF/CNPJ em tempo real</li>
+      <li>Emissão de certificado digital (e-CNPJ)</li>
+      <li>Atendimento consultivo e suporte administrativo</li>
+      <li>Painel digital do associado, disponível 24h</li>
+    </ul>
+    <h2>Como funciona a filiação</h2>
+    <ol>
+      <li>Faça o cadastro online com seus dados e CPF/CNPJ</li>
+      <li>A equipe analisa e aprova o seu pedido</li>
+      <li>Após aprovação, você acessa o painel e solicita serviços</li>
+    </ol>
+    <p class="muted">Localização: {{ associacao.CIDADE }}/{{ associacao.UF }} · Contato: {{ associacao.TELEFONE }}</p>
+  </div>
+</section>
+{% endblock %}

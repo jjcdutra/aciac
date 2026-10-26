@@ -1,0 +1,22 @@
+# Caddy — proxy reverso com HTTPS automático (Let's Encrypt).
+# O domínio vem do .env (DOMAIN=dutratech.cloud); o certificado cobre
+# o domínio raiz e o www de uma vez.
+
+{$DOMAIN:dutratech.cloud}, www.{$DOMAIN:dutratech.cloud} {
+	encode gzip
+
+	# Arquivos de mídia (uploads) servidos direto pelo Caddy
+	# (volume compartilhado com o app em /app/media).
+	handle_path /media/* {
+		root * /media
+		file_server
+	}
+
+	handle {
+		reverse_proxy app:8000
+	}
+
+	log {
+		output stdout
+	}
+}

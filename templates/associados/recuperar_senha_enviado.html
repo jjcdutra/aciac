@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Link enviado — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title"><h1>Link enviado</h1></div>
+<section class="section" style="padding-top:0">
+  <div class="form-card" style="max-width:460px">
+    <div class="alert alert-success">Se o e-mail informado estiver cadastrado, você receberá as instruções em instantes.</div>
+    <p class="text-center"><a class="btn btn-outline" href="{% url 'associados:login' %}">Voltar ao login</a></p>
+  </div>
+</section>
+{% endblock %}

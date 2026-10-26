@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Minhas solicitações — {{ associacao.NOME }}{% endblock %}
+
+{% block content %}
+<div class="container page-title">
+  <h1>Minhas solicitações</h1>
+  <p class="muted"><a href="{% url 'associados:painel' %}">← Voltar ao painel</a></p>
+</div>
+
+<section class="section" style="padding-top:0">
+  <div class="form-card wide">
+    {% if solicitacoes %}
+      {% for s in solicitacoes %}
+        <div class="solicitacao-item">
+          <div>
+            <strong>{{ s.protocolo }}</strong> — {{ s.servico.nome }}<br>
+            <span class="muted">R$ {{ s.valor|floatformat:2 }} · criado em {{ s.criado_em|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div style="display:flex;gap:0.6rem;align-items:center">
+            <span class="badge badge-{{ s.cor_status }}">{{ s.get_status_display }}</span>
+            {% if s.pode_pagar %}
+              <a class="btn btn-primary btn-sm" href="{% url 'solicitacoes:pagar' s.protocolo %}">Pagar</a>
+            {% endif %}
+            <a class="btn btn-outline btn-sm" href="{% url 'solicitacoes:detalhe' s.protocolo %}">Detalhes</a>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <p>Nenhuma solicitação ainda.</p>
+        <a class="btn btn-primary" href="{% url 'solicitacoes:servicos' %}">Solicitar serviço</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

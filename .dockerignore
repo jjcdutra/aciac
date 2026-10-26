@@ -1,0 +1,16 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.env
+db.sqlite3
+media/
+staticfiles/
+backups/
+deploy/
+deploy.sh
+DEPLOY.md
+.pytest_cache
+.DS_Store
+README.md
