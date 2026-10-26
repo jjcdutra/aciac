@@ -247,16 +247,45 @@ crontab -e
 
 Copie os backups para fora do VPS periodicamente (ex.: `scp`, storage).
 
-### 5.2 Atualizações de código
+### 5.2 Atualizações de código (fluxo completo)
+
+**No seu computador** (após alterar o código):
 
 ```bash
+git add -A
+git commit -m "descricao da mudanca"
+git push origin main
+```
+
+**No servidor** (puxar e reimplantar):
+
+```bash
+ssh root@148.230.73.191
 cd /opt/associacao
 git pull --ff-only
 ./deploy.sh up      # rebuild + restart; migrations rodam automaticamente
 ```
 
-Se mudar os labels Traefik no compose, o Traefik reconfigura sozinho ao
-recriar o container (não precisa reiniciar o n8n).
+Notas:
+
+- `./deploy.sh up` roda `migrate` + `collectstatic` antes do gunicorn —
+  migrations novas aplicam sozinhas.
+- Se mudar os labels Traefik no compose, o Traefik reconfigura sozinho ao
+  recriar o container (não precisa reiniciar o n8n).
+- Se mudar variáveis de ambiente no `.env` **do servidor**, use
+  `docker compose -f docker-compose.prod.yml up -d app` (recria o container
+  e relê o `.env`; `restart` **não** relê variáveis).
+
+### 5.3 Alterar configurações (`.env`)
+
+Identidade da associação, valores, chave PIX e SMTP são alterados só no
+`.env` do servidor (não versionado):
+
+```bash
+ssh root@148.230.73.191
+nano /opt/associacao/.env
+cd /opt/associacao && docker compose -f docker-compose.prod.yml up -d app
+```
 
 ---
 
@@ -275,7 +304,6 @@ recriar o container (não precisa reiniciar o n8n).
 Logs úteis:
 
 ```bash
-./deploy.sh logs app
 ./deploy.sh logs app
 ./deploy.sh logs db
 docker compose -f docker-compose.prod.yml exec app \
@@ -296,3 +324,14 @@ docker compose -f docker-compose.prod.yml exec app \
 - [ ] `https://dutratech.cloud` respondendo com cadeado no navegador
 - [ ] Backup agendado (cron) e um backup manual feito
 - [ ] E-mail SMTP configurado (recuperação de senha)
+
+---
+
+## 8. Pendências conhecidas
+
+Itens que ficaram com valor placeholder no primeiro deploy:
+
+| Item | Situação atual | Como resolver |
+|---|---|---|
+| `ASSOCIACAO_PIX_CHAVE` | UUID de desenvolvimento | `nano /opt/associacao/.env` → chave PIX oficial → `docker compose -f docker-compose.prod.yml up -d app` (ver 5.3) |
+| E-mail SMTP | `console.EmailBackend` (e-mails só no log) | Configurar `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend` + `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_PASSWORD` no `.env` do servidor e recriar o container |
